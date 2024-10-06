@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amazon Review Scraper</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f2f2f2;
+        margin: 0;
+      }
+      .container {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 300px;
+      }
+      h2 {
+        margin-top: 0;
+        text-align: center;
+      }
+      label,
+      input,
+      button {
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      input,
+      button {
+        padding: 10px;
+        border: 1px solid #cccccc;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+      button:disabled {
+        background-color: #cccccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Amazon Review Scraper</h2>
+      <label for="url">Enter Amazon Product URL:</label>
+      <input
+        type="text"
+        id="url"
+        placeholder="Enter the product review link here ....."
+      />
+      <label for="totalReviews">Number of Reviews:</label>
+      <input
+        type="number"
+        id="totalReviews"
+        placeholder="e.g. 100"
+        min="1"
+        max="100"
+      />
+      <button id="scrapeBtn" onclick="scrapeReviews()">Scrape Reviews</button>
+      <button id="downloadJsonBtn" onclick="downloadJson()" disabled>
+        Download Reviews as JSON
+      </button>
+      <button id="downloadCsvBtn" onclick="downloadCsv()" disabled>
+        Download Reviews as CSV
+      </button>
+    </div>
+
+    <script>
+      let scrapedReviews = [];
+
+      async function scrapeReviews() {
+        const url = document.getElementById("url").value;
+        const totalReviews = parseInt(
+          document.getElementById("totalReviews").value
+        );
+
+        if (!url) {
+          alert("Please enter a valid Amazon product URL.");
+          return;
+        }
+        if (isNaN(totalReviews) || totalReviews <= 0) {
+          alert("Please enter a valid number of reviews.");
+          return;
+        }
+        if (totalReviews >= 10) {
+          alert("Please enter a totalReviews less than 10");
+          return;
+        }
+
+        try {
+          const response = await fetch("http://localhost:3000/scrape-reviews", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url, totalReviews }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          scrapedReviews = await response.json();
+          console.log("Reviews scraped:", scrapedReviews);
+          alert("Reviews scraped successfully! You can now download them.");
+          document.getElementById("downloadJsonBtn").disabled = false;
+          document.getElementById("downloadCsvBtn").disabled = false;
+        } catch (error) {
+          alert("Failed to scrape reviews. Please try again.");
+          console.error("Error in scrapeReviews:", error);
+        }
+      }
+
+      function downloadJson() {
+        if (scrapedReviews.length === 0) {
+          alert("No reviews to download. Please scrape first.");
+          return;
+        }
+
+        const jsonBlob = new Blob([JSON.stringify(scrapedReviews, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(jsonBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "all_reviews.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function downloadCsv() {
+        if (scrapedReviews.length === 0) {
+          alert("No reviews to download. Please scrape first.");
+          return;
+        }
+
+        const csvRows = [];
+        const headers = ["Title", "Rating", "Text", "Date", "Author"];
+        csvRows.push(headers.join(","));
+
+        scrapedReviews.forEach((review) => {
+          const row = [
+            review.title || "",
+            review.rating || "",
+            review.text || "",
+            review.date || "",
+            review.author || "",
+          ];
+          csvRows.push(row.join(","));
+        });
+
+        const csvBlob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+        const url = URL.createObjectURL(csvBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "all_reviews.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    </script>
+  </body>
+</html>
