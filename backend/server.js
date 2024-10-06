@@ -6,7 +6,13 @@ const cors = require("cors");
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["https://web-scraping-reviews-page.vercel.app/"],
+    methods: ["POST", "GET"],
+    credentials: true,
+  })
+);
 app.use(bodyParser.json());
 
 app.post("/scrape-reviews", async (req, res) => {
