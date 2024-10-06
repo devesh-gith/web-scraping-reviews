@@ -8,7 +8,7 @@ const PORT = 3000;
 
 app.use(
   cors({
-    origin: ["https://web-scraping-reviews-page.vercel.app/"],
+    origin: ["https://web-scraping-reviews-page.vercel.app"],
     methods: ["POST", "GET"],
     credentials: true,
   })
