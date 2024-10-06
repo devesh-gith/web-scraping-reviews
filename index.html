@@ -91,10 +91,6 @@
           alert("Please enter a valid number of reviews.");
           return;
         }
-        if (totalReviews >= 10) {
-          alert("Please enter a totalReviews less than 10");
-          return;
-        }
 
         try {
           const response = await fetch("http://localhost:3000/scrape-reviews", {
